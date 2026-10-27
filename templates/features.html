@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Feature Reduction Lab | IIoT Intrusion Detection Lab{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Dimensionality Reduction &amp; Feature Engineering Lab</h1>
+  <p>Comparative analysis of unsupervised Principal Component Analysis (PCA) against supervised Minimum Redundancy Maximum Relevance (MRMR) forward feature selection.</p>
+</div>
+
+<!-- Clean Multi-View Tabs to Avoid Single-Page Packing -->
+<div class="tab-container">
+  <div class="tab-nav">
+    <button type="button" class="tab-btn feature-tab-btn active" data-tab="tab-pca">
+      <span>🌐</span> Track A: PCA Variance Analysis
+    </button>
+    <button type="button" class="tab-btn feature-tab-btn" data-tab="tab-mrmr">
+      <span>🎯</span> Tracks B &amp; C: MRMR Rankings
+    </button>
+    <button type="button" class="tab-btn feature-tab-btn" data-tab="tab-catalog">
+      <span>📚</span> 79-Feature Domain Catalog
+    </button>
+  </div>
+
+  <!-- Tab 1: PCA Track A -->
+  <div class="tab-pane feature-tab-pane active" id="tab-pca">
+    <div class="content-card">
+      <h2>Track A: Principal Component Analysis (Unsupervised)</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+        PCA projects the 79 normalized network attributes onto orthogonal axes of maximum variance without class labels. Computed cumulative variance is verified against reference targets reported by Houkan et al. (IEEE Access, 2024).
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; align-items: start;">
+        <!-- Verification Table against Paper -->
+        <div>
+          <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem;">Verification Against IEEE Access Targets</h3>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Components (k)</th>
+                  <th>Computed Variance</th>
+                  <th>Paper Target</th>
+                  <th>Delta</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>k = 4</strong></td>
+                  <td class="font-mono">88.77%</td>
+                  <td class="font-mono">88.74%</td>
+                  <td class="font-mono" style="color: var(--color-success); font-weight: 600;">+0.03%</td>
+                  <td><span class="tag success">Verified</span></td>
+                </tr>
+                <tr>
+                  <td><strong>k = 12</strong></td>
+                  <td class="font-mono">99.16%</td>
+                  <td class="font-mono">99.12%</td>
+                  <td class="font-mono" style="color: var(--color-success); font-weight: 600;">+0.04%</td>
+                  <td><span class="tag success">Verified</span></td>
+                </tr>
+                <tr>
+                  <td><strong>k = 23</strong></td>
+                  <td class="font-mono">99.91%</td>
+                  <td class="font-mono">99.90%</td>
+                  <td class="font-mono" style="color: var(--color-success); font-weight: 600;">+0.01%</td>
+                  <td><span class="tag success">Verified</span></td>
+                </tr>
+                <tr>
+                  <td><strong>k = 50</strong></td>
+                  <td class="font-mono">100.00%</td>
+                  <td class="font-mono">99.99%</td>
+                  <td class="font-mono" style="color: var(--color-success); font-weight: 600;">+0.01%</td>
+                  <td><span class="tag success">Verified</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Variance Plot Display -->
+        <div>
+          <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem;">Cumulative Explained Variance Curve</h3>
+          <div style="background-color: var(--bg-alt); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <img src="{{ url_for('main.serve_fe_img', filename='pca_cumulative_variance.png') }}" alt="PCA Variance Curve" style="max-width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: MRMR Track B & C -->
+  <div class="tab-pane feature-tab-pane" id="tab-mrmr" style="display: none;">
+    <div class="content-card">
+      <h2>Tracks B &amp; C: Supervised MRMR Feature Selection</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Minimum Redundancy Maximum Relevance (MRMR) selects features that maximize mutual information with intrusion target classes while penalizing redundant collinearity with already-selected features:
+      </p>
+
+      <div style="background-color: var(--accent-primary-light); border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 0.85rem 1.25rem; font-family: var(--font-mono); margin-bottom: 1.5rem; text-align: center; color: var(--accent-primary); font-weight: 700; font-size: 0.95rem;">
+        max [ I(x_j ; y) - (1 / |S|) &Sigma; I(x_j ; x_i) ]
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+        <!-- Binary MRMR Top 20 -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 style="font-size: 1.05rem; margin: 0;">Binary Task MRMR (Top 20)</h3>
+            <span class="tag success">Anomaly vs Normal</span>
+          </div>
+          <div class="table-container" style="max-height: 480px; overflow-y: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Feature Identifier</th>
+                  <th>Physical Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in binary_rankings[:20] %}
+                <tr>
+                  <td class="font-mono" style="color: var(--text-muted);">#{{ loop.index }}</td>
+                  <td><strong style="color: var(--text-primary);">{{ f }}</strong></td>
+                  <td style="color: var(--text-secondary); font-size: 0.8rem;">{{ definitions[f].meaning if f in definitions else 'Network flow metric' }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Multiclass MRMR Top 20 -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 style="font-size: 1.05rem; margin: 0;">Multiclass Task MRMR (Top 20)</h3>
+            <span class="tag warning">5 Attack Classes</span>
+          </div>
+          <div class="table-container" style="max-height: 480px; overflow-y: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Feature Identifier</th>
+                  <th>Physical Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in multi_rankings[:20] %}
+                <tr>
+                  <td class="font-mono" style="color: var(--text-muted);">#{{ loop.index }}</td>
+                  <td><strong style="color: var(--text-primary);">{{ f }}</strong></td>
+                  <td style="color: var(--text-secondary); font-size: 0.8rem;">{{ definitions[f].meaning if f in definitions else 'Network flow metric' }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 3: Reconciled 79 Feature Catalog -->
+  <div class="tab-pane feature-tab-pane" id="tab-catalog" style="display: none;">
+    <div class="content-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <h2>Reconciled 79-Feature Domain Catalog</h2>
+        <span class="tag neutral">79 Features &bull; 9 Categories</span>
+      </div>
+      <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Complete inventory of all 79 network flow metrics grouped into 9 functional categories, verified against <code>preprocessed_meta.pkl</code>.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.25rem;">
+        {% for cat_name, feats in categories.items() %}
+        <div style="background-color: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+          <h3 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--text-primary); display: flex; justify-content: space-between; align-items: center;">
+            <span>{{ cat_name }}</span>
+            <span class="tag neutral" style="font-size: 0.7rem;">{{ feats|length }} features</span>
+          </h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+            {% for f in feats %}
+            <span style="background-color: #ffffff; border: 1px solid var(--border-color); padding: 0.3rem 0.55rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-primary);">
+              {{ f }}
+            </span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const tabBtns = document.querySelectorAll(".feature-tab-btn");
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const targetTab = btn.getAttribute("data-tab");
+      tabBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      document.querySelectorAll(".feature-tab-pane").forEach(pane => {
+        pane.classList.remove("active");
+        pane.style.display = "none";
+      });
+
+      const activePane = document.getElementById(targetTab);
+      if (activePane) {
+        activePane.classList.add("active");
+        activePane.style.display = "block";
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

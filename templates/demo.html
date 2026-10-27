@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Live Threat Demo & Explainability Console | IIoT Intrusion Detection Lab{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Live Threat Detection &amp; Explainability Console</h1>
+  <p>Select authentic network flow presets from the IoTID20 held-out test split, configure the dimensionality reduction method and estimator, and inspect live inference outputs and decision mechanics.</p>
+</div>
+
+<div class="demo-layout">
+  <!-- Left Column: Controls & Presets -->
+  <aside class="controls-card">
+    <div class="form-group">
+      <div class="step-header">
+        <span class="step-num">1</span>
+        <label class="form-label" style="margin: 0;">Select Network Preset</label>
+      </div>
+      <div class="preset-list" id="preset-container">
+        <button type="button" class="preset-btn active" data-preset="mirai_udp" id="preset-mirai_udp">
+          <div class="preset-info">
+            <span class="preset-name">Mirai UDP Flooding</span>
+            <span class="preset-type">Camera Botnet &bull; Port 9988</span>
+          </div>
+          <span class="tag danger">Anomaly</span>
+        </button>
+
+        <button type="button" class="preset-btn" data-preset="dos_syn" id="preset-dos_syn">
+          <div class="preset-info">
+            <span class="preset-name">DoS SYN Flooding</span>
+            <span class="preset-type">SYN Exhaustion &bull; Port 554</span>
+          </div>
+          <span class="tag danger">Anomaly</span>
+        </button>
+
+        <button type="button" class="preset-btn" data-preset="benign_normal" id="preset-benign_normal">
+          <div class="preset-info">
+            <span class="preset-name">Benign Normal Traffic</span>
+            <span class="preset-type">Clean Industrial Flow &bull; Port 49784</span>
+          </div>
+          <span class="tag success">Normal</span>
+        </button>
+
+        <button type="button" class="preset-btn" data-preset="port_scan" id="preset-port_scan">
+          <div class="preset-info">
+            <span class="preset-name">Port &amp; OS Scanning</span>
+            <span class="preset-type">Reconnaissance Probe &bull; Port 9010</span>
+          </div>
+          <span class="tag warning">Anomaly</span>
+        </button>
+
+        <button type="button" class="preset-btn" data-preset="mitm_arp" id="preset-mitm_arp">
+          <div class="preset-info">
+            <span class="preset-name">MITM ARP Spoofing</span>
+            <span class="preset-type">ARP Poisoning &bull; Port 443</span>
+          </div>
+          <span class="tag warning">Anomaly</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Pipeline Configuration Controls -->
+    <div class="form-group">
+      <div class="step-header">
+        <span class="step-num">2</span>
+        <label class="form-label" for="task-select" style="margin: 0;">Classification Task</label>
+      </div>
+      <select class="form-select" id="task-select">
+        <option value="binary" selected>Binary (Anomaly vs. Normal)</option>
+        <option value="multiclass">Multiclass (5 Attack Categories)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <div class="step-header">
+        <span class="step-num">3</span>
+        <label class="form-label" for="method-select" style="margin: 0;">Feature Reduction Method</label>
+      </div>
+      <select class="form-select" id="method-select">
+        <option value="mrmr" selected>MRMR (Supervised Selection)</option>
+        <option value="pca">PCA (Principal Components)</option>
+        <option value="baseline">Baseline (All 79 Features)</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="n-features-group">
+      <div class="step-header">
+        <span class="step-num">4</span>
+        <label class="form-label" for="n-features-select" style="margin: 0;">Feature Count (k)</label>
+      </div>
+      <select class="form-select" id="n-features-select">
+        <option value="4">k = 4 Features / Components</option>
+        <option value="12" selected>k = 12 Features / Components (Optimal)</option>
+        <option value="23">k = 23 Features / Components</option>
+        <option value="50">k = 50 Features / Components</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <div class="step-header">
+        <span class="step-num">5</span>
+        <label class="form-label" for="model-select" style="margin: 0;">Classifier Architecture</label>
+      </div>
+      <select class="form-select" id="model-select">
+        <option value="Decision Tree" selected>Decision Tree (White-Box, &lt; 0.001 ms)</option>
+        <option value="Neural Network">Neural Network (MLP 25 Neurons, &lt; 0.5 ms)</option>
+      </select>
+    </div>
+
+    <button type="button" class="btn-primary" id="execute-btn">
+      <span>⚡</span>
+      <span>Execute Intrusion Analysis</span>
+    </button>
+  </aside>
+
+  <!-- Right Column: Telemetry & Interpretability Output -->
+  <section class="results-area" id="results-area">
+    <!-- Primary Threat Banner -->
+    <div class="threat-banner anomaly" id="threat-banner">
+      <div class="threat-meta">
+        <span class="threat-label" id="threat-label" style="color: var(--color-danger);">THREAT DETECTED</span>
+        <span class="threat-name" id="threat-name">ANOMALY (MIRAI)</span>
+        <span style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;" id="preset-context-desc">
+          Test Row 0 &bull; Mirai-UDP Flooding targeting port 9988
+        </span>
+      </div>
+      <div class="threat-stats">
+        <div class="stat-box">
+          <span class="stat-label">Model Confidence</span>
+          <span class="stat-val" id="confidence-val" style="color: var(--color-danger);">99.98%</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Inference Latency</span>
+          <span class="stat-val" id="latency-val" style="color: var(--accent-primary);">0.38 ms</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ground Truth Integrity Bar -->
+    <div class="ground-truth-bar" id="ground-truth-bar">
+      <div>
+        <span style="color: var(--text-secondary);">Ground-Truth Class:</span>
+        <strong id="gt-label" style="color: var(--text-primary); margin-left: 0.35rem;">Anomaly (Mirai)</strong>
+      </div>
+      <div>
+        <span style="color: var(--text-secondary);">Model Output:</span>
+        <strong id="model-pred-label" style="color: var(--text-primary); margin-left: 0.35rem;">Anomaly</strong>
+      </div>
+      <div id="eval-match-badge">
+        <span class="tag success" id="match-tag">✓ Authentic Match</span>
+      </div>
+    </div>
+
+    <!-- Probability Breakdown Card -->
+    <div class="content-card" id="prob-breakdown-card" style="padding: 1.25rem 1.5rem; margin-bottom: 0;">
+      <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Class Probability Distribution</h3>
+      <div id="prob-bars-container" style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+
+    <!-- Tabbed Multi-View Sections (Reduces single-page density) -->
+    <div class="tab-container" style="margin-top: 0.5rem; margin-bottom: 0;">
+      <div class="tab-nav" style="margin-bottom: 1rem;">
+        <button type="button" class="tab-btn demo-tab-btn active" data-tab="pane-explanation" id="tab-btn-explanation">
+          <span>🔍</span> Model Decision Explanation
+        </button>
+        <button type="button" class="tab-btn demo-tab-btn" data-tab="pane-features" id="tab-btn-features">
+          <span>📋</span> Supplied Input Features
+        </button>
+        <button type="button" class="tab-btn demo-tab-btn" data-tab="pane-pca" id="tab-btn-pca" style="display: none;">
+          <span>🌐</span> PCA Component Telemetry
+        </button>
+      </div>
+
+      <!-- Tab Pane 1: Model Decision Explanation (White-Box Tree / MLP) -->
+      <div class="tab-pane demo-tab-pane active" id="pane-explanation">
+        <!-- Decision Tree Path Explanation Panel -->
+        <div class="content-card" id="dt-explanation-card" style="margin-bottom: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3>Decision Tree Traversal Trace (White-Box)</h3>
+            <span class="tag neutral" id="path-length-badge">8 Steps Traversed</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1rem;" id="dt-path-summary">
+            Extracted directly from the serialized estimator via <code>model.decision_path()</code>. Shows each split condition and branch evaluated for this flow.
+          </p>
+          <div class="path-container" id="path-steps-container">
+            <!-- Injected via JavaScript -->
+          </div>
+        </div>
+
+        <!-- Neural Network Explanation Panel (When MLP Selected) -->
+        <div class="content-card" id="mlp-explanation-card" style="display: none; margin-bottom: 0;">
+          <h3>Model Decision Context (Neural Network)</h3>
+          <div class="notice-box">
+            <strong>Architectural Interpretability Notice:</strong><br>
+            The 25-neuron Multi-Layer Perceptron (MLP) computes a continuous non-linear mapping across the entire input vector. Local split conditions are not mathematically defined for this estimator. Global feature relevance is determined during feature selection (MRMR), as listed in the Supplied Input Features tab.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Pane 2: Comprehensive Features Used Table -->
+      <div class="tab-pane demo-tab-pane" id="pane-features" style="display: none;">
+        <div class="content-card" style="margin-bottom: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3>Features Supplied to Estimator</h3>
+            <span class="tag neutral" id="feat-count-badge">12 Features</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1rem;">
+            Exact feature vector passed to the model. Normalized values reflect Min-Max scaling $[0, 1]$. Raw values reflect authentic physical network units.
+          </p>
+          <div class="table-container">
+            <table class="data-table" id="features-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Feature Identifier</th>
+                  <th>Raw Value</th>
+                  <th>Normalized [0, 1]</th>
+                  <th>Importance Metric</th>
+                  <th>Domain Definition &amp; Industrial Relevance</th>
+                </tr>
+              </thead>
+              <tbody id="features-table-body">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Pane 3: PCA Telemetry Panel (When PCA Selected) -->
+      <div class="tab-pane demo-tab-pane" id="pane-pca" style="display: none;">
+        <div class="content-card" id="pca-telemetry-card" style="margin-bottom: 0;">
+          <h3>Principal Component Transformations &amp; Feature Loadings</h3>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1rem;">
+            The classifier operates on orthogonal principal components rather than directly on original network attributes. Below are the coordinate values, explained variance, and top original feature loadings extracted from <code>full_pca.components_</code>.
+          </p>
+          <div class="table-container">
+            <table class="data-table" id="pca-components-table">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Projected Value (z)</th>
+                  <th>Explained Variance</th>
+                  <th>Cumulative Variance</th>
+                  <th>Top Constituent Original Features (Loadings)</th>
+                </tr>
+              </thead>
+              <tbody id="pca-components-body">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/demo.js') }}"></script>
+{% endblock %}

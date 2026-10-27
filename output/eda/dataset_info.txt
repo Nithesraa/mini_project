@@ -1,0 +1,43 @@
+Dataset Shape: (625783, 86)
+Number of rows: 625783
+Number of columns: 86
+
+--- Data Types ---
+  float64: 45
+  int64: 34
+  object: 7
+
+--- Missing Values ---
+  Total missing values: 0
+
+--- Duplicate Rows ---
+  Duplicate rows: 164087 (26.22%)
+  Note: Duplicates are KEPT (paper does not mention removal)
+
+--- Infinite Values ---
+  Flow_Byts/s: 368 infinite values
+  Flow_Pkts/s: 368 infinite values
+
+--- Class Distribution: Label (Binary) ---
+  Anomaly: 585710 (93.60%)
+  Normal: 40073 (6.40%)
+
+--- Class Distribution: Cat (Multi-class) ---
+  Mirai: 415677 (66.43%)
+  Scan: 75265 (12.03%)
+  DoS: 59391 (9.49%)
+  Normal: 40073 (6.40%)
+  MITM ARP Spoofing: 35377 (5.65%)
+
+--- Class Distribution: Sub_Cat (9-class, not used) ---
+  Mirai-UDP Flooding: 183554 (29.33%)
+  Mirai-Hostbruteforceg: 121181 (19.36%)
+  DoS-Synflooding: 59391 (9.49%)
+  Mirai-HTTP Flooding: 55818 (8.92%)
+  Mirai-Ackflooding: 55124 (8.81%)
+  Scan Port OS: 53073 (8.48%)
+  Normal: 40073 (6.40%)
+  MITM ARP Spoofing: 35377 (5.65%)
+  Scan Hostport: 22192 (3.55%)
+
+Memory Usage: 682.18 MB

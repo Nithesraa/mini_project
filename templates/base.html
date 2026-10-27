@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Industrial IoT Intrusion Detection Lab{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <!-- Navigation Header -->
+  <header class="navbar">
+    <a href="{{ url_for('main.index') }}" class="nav-brand" id="nav-brand-logo">
+      <span class="brand-icon">🛡️</span>
+      <span>IIoT Security Lab</span>
+      <span class="brand-badge">IEEE Access 2024</span>
+    </a>
+    <nav>
+      <ul class="nav-links">
+        <li>
+          <a href="{{ url_for('main.index') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" id="nav-dashboard">
+            <span>📊</span> Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('main.demo') }}" class="nav-link {% if active_page == 'demo' %}active{% endif %}" id="nav-demo">
+            <span>⚡</span> Live Threat Demo
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('main.benchmarks') }}" class="nav-link {% if active_page == 'benchmarks' %}active{% endif %}" id="nav-benchmarks">
+            <span>📈</span> Benchmarks (108)
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('main.features') }}" class="nav-link {% if active_page == 'features' %}active{% endif %}" id="nav-features">
+            <span>🔬</span> Feature Reduction
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('main.methodology') }}" class="nav-link {% if active_page == 'methodology' %}active{% endif %}" id="nav-methodology">
+            <span>📐</span> Methodology
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main View Content -->
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Professional Academic Footer -->
+  <footer>
+    <p>
+      <strong>Industrial IoT Intrusion Detection System Reproduction &amp; Evaluation Suite</strong><br>
+      Base Reference: Houkan et al., <em>"Enhancing Security in Industrial IoT Networks: Machine Learning Solutions for Feature Selection and Reduction"</em>, IEEE Access, 2024.<br>
+      Evaluated on IoTID20 Dataset (625,783 network flows &times; 86 attributes) &bull; Built with Flask &amp; Scikit-Learn 1.6.1.
+    </p>
+  </footer>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

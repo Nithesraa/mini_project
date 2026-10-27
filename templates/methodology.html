@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Methodology & Architecture | IIoT Intrusion Detection Lab{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>System Methodology &amp; Mathematical Specifications</h1>
+  <p>Technical architecture, mathematical models, and verified reproduction mappings from MATLAB Classification Learner to Scikit-Learn 1.6.1.</p>
+</div>
+
+<!-- Architecture Diagram / Pipeline Card -->
+<div class="content-card" style="margin-bottom: 1.5rem;">
+  <h2>End-to-End Experimental Pipeline</h2>
+  <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+    Reproduced workflow pipeline executing data ingestion, cleaning, stratified partitioning, dimensional reduction, and multi-model training.
+  </p>
+
+  <div class="pipeline-track">
+    <div class="pipeline-node">
+      <div>
+        <div class="pipeline-node-num">Stage 1 &bull; Ingestion</div>
+        <div class="pipeline-node-title">IoTID20 Dataset</div>
+      </div>
+      <div class="pipeline-node-meta">625,783 &times; 86 cols</div>
+    </div>
+
+    <div class="pipeline-arrow">&rarr;</div>
+
+    <div class="pipeline-node">
+      <div>
+        <div class="pipeline-node-num">Stage 2 &bull; Preprocessing</div>
+        <div class="pipeline-node-title">Drop 4 Metadata</div>
+      </div>
+      <div class="pipeline-node-meta">Clean &infin; &bull; MinMax [0, 1]</div>
+    </div>
+
+    <div class="pipeline-arrow">&rarr;</div>
+
+    <div class="pipeline-node">
+      <div>
+        <div class="pipeline-node-num">Stage 3 &bull; Partitioning</div>
+        <div class="pipeline-node-title">70/30 Stratified</div>
+      </div>
+      <div class="pipeline-node-meta">Seed = 42 &bull; 438k / 187k</div>
+    </div>
+
+    <div class="pipeline-arrow">&rarr;</div>
+
+    <div class="pipeline-node">
+      <div>
+        <div class="pipeline-node-num">Stage 4 &bull; Feature Tracks</div>
+        <div class="pipeline-node-title">Baseline / PCA / MRMR</div>
+      </div>
+      <div class="pipeline-node-meta">k &in; {4, 12, 23, 50, 79}</div>
+    </div>
+
+    <div class="pipeline-arrow">&rarr;</div>
+
+    <div class="pipeline-node">
+      <div>
+        <div class="pipeline-node-num">Stage 5 &bull; Estimation</div>
+        <div class="pipeline-node-title">6 ML Classifiers</div>
+      </div>
+      <div class="pipeline-node-meta">108 Trained Models (.joblib)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Mathematical Translation Table -->
+<div class="content-card">
+  <h2>MATLAB-to-Scikit-Learn Architectural Equivalences</h2>
+  <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+    The original study conducted experiments using MATLAB Classification Learner. To ensure publication-grade equivalence in Python, estimators were configured with exact mathematical mappings:
+  </p>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Model Family</th>
+          <th>MATLAB Reference Specification</th>
+          <th>Scikit-Learn Implementation</th>
+          <th>Mathematical Rationale &amp; Equivalence</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color: var(--text-primary);">Decision Tree</strong></td>
+          <td class="font-mono">MaxNumSplits=100, Gini index</td>
+          <td class="font-mono" style="color: var(--accent-primary);">DecisionTreeClassifier(max_leaf_nodes=101, criterion='gini')</td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">A tree with $N$ splits produces at most $N+1$ leaf nodes. Missing values were resolved during preprocessing.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--text-primary);">KNN</strong></td>
+          <td class="font-mono">k=10, Euclidean, 1/d² distance weights</td>
+          <td class="font-mono" style="color: var(--accent-primary);">KNeighborsClassifier(n_neighbors=10, weights=w_custom)</td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">Custom weight function $w = 1 / (d^2 + 10^{-10})$ matches MATLAB's squared inverse distance weighting. Wrapped in StandardScaler pipeline.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--text-primary);">Gaussian SVM</strong></td>
+          <td class="font-mono">RBF kernel, KernelScale=2.2, C=1.0, OvO</td>
+          <td class="font-mono" style="color: var(--accent-primary);">SVC(kernel='rbf', gamma=0.1033, C=1.0)</td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">MATLAB's kernel scale relates to scikit-learn via $\gamma = 1 / (2\sigma^2) = 1 / (2 \times 2.2^2) \approx 0.1033$. Exact equivalence.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--text-primary);">Neural Network</strong></td>
+          <td class="font-mono">Single hidden layer (25 neurons), ReLU</td>
+          <td class="font-mono" style="color: var(--accent-primary);">MLPClassifier(hidden_layer_sizes=(25,), activation='relu', alpha=0.0)</td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">Matches layer topology exactly. Solved via Adam optimizer with zero L2 regularization ($\alpha=0.0$). Wrapped in StandardScaler.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--text-primary);">SVM Kernel</strong></td>
+          <td class="font-mono">fitckernel: RFF kernel expansion</td>
+          <td class="font-mono" style="color: var(--accent-primary);">OneVsOne(RBFSampler(n_components=400) + LinearSVC())</td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">Reproduces MATLAB's Random Fourier Feature kernel expansion ($D=400$) wrapped in One-vs-One multi-class decomposition.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--text-primary);">Logistic Regression Kernel</strong></td>
+          <td class="font-mono">Kernelized Logistic Regression</td>
+          <td class="font-mono" style="color: var(--accent-primary);">OneVsOne(Nystroem(n_components=100) + LogisticRegression())</td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">Nystroem RBF kernel approximation ($D=100$, Rahimi &amp; Recht) mapped to linear logistic regression wrapped in OvO.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

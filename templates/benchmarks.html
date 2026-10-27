@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Model Benchmarks (108 Experiments) | IIoT Intrusion Detection Lab{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Model Benchmarks &amp; Performance Hub</h1>
+  <p>Comprehensive empirical results across all 108 experimental configurations (2 tasks &times; 9 feature sets &times; 6 ML algorithms) evaluated on 187,735 held-out test flows.</p>
+</div>
+
+<!-- Filters Bar -->
+<div class="content-card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end;">
+    <div>
+      <label class="form-label" for="filter-task">Filter by Task</label>
+      <select class="form-select" id="filter-task">
+        <option value="">All Classification Tasks</option>
+        <option value="binary">Binary (Anomaly vs Normal)</option>
+        <option value="multiclass">Multiclass (5 Categories)</option>
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="filter-method">Filter by Reduction Track</label>
+      <select class="form-select" id="filter-method">
+        <option value="">All Reduction Tracks</option>
+        <option value="baseline">Baseline (79 Features)</option>
+        <option value="mrmr">MRMR Selection</option>
+        <option value="pca">PCA Components</option>
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="filter-model">Filter by Classifier</label>
+      <select class="form-select" id="filter-model">
+        <option value="">All Machine Learning Classifiers</option>
+        <option value="Decision Tree">Decision Tree</option>
+        <option value="Neural Network">Neural Network (MLP)</option>
+        <option value="Gaussian SVM">Gaussian SVM</option>
+        <option value="KNN">KNN</option>
+        <option value="SVM Kernel">SVM Kernel (RFF)</option>
+        <option value="Logistic Regression Kernel">Logistic Regression Kernel</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- Master Benchmarks Table Card -->
+<div class="content-card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+    <h2>Experimental Grid Results</h2>
+    <span class="tag neutral" id="results-count-tag">{{ results|length }} Experiments</span>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table" id="benchmarks-table">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Track</th>
+          <th>Features (k)</th>
+          <th>Algorithm</th>
+          <th>Accuracy</th>
+          <th>F1-Score</th>
+          <th>False Alarm Rate</th>
+          <th>Throughput (obs/s)</th>
+          <th>Train Time (s)</th>
+          <th>Model Size</th>
+          <th>Confusion Matrix</th>
+        </tr>
+      </thead>
+      <tbody id="benchmarks-tbody">
+        {% for r in results %}
+        <tr data-task="{{ r.task }}" data-method="{{ r.method }}" data-model="{{ r.model_name }}">
+          <td><span class="tag {% if r.task == 'binary' %}success{% else %}warning{% endif %}">{{ r.task|capitalize }}</span></td>
+          <td><strong>{{ r.method|upper }}</strong></td>
+          <td class="font-mono">{{ r.n_features }}</td>
+          <td><strong style="color: var(--text-primary);">{{ r.model_name }}</strong></td>
+          <td class="font-mono" style="color: var(--accent-primary); font-weight: 700;">{{ (r.accuracy * 100)|round(2) }}%</td>
+          <td class="font-mono">{{ (r.f1_score * 100)|round(2) }}%</td>
+          <td class="font-mono">{{ (r.far * 100)|round(4) }}%</td>
+          <td class="font-mono">{{ "{:,}".format(r.pred_speed_obs_per_sec|int) }}</td>
+          <td class="font-mono">{{ r.train_time_sec|round(2) }}s</td>
+          <td class="font-mono">{{ r.model_size_kb|round(1) }} KB</td>
+          <td>
+            <button type="button" class="btn-secondary view-cm-btn" data-exp="{{ r.experiment_id }}" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+              <span>🔍</span> Inspect Matrix
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Confusion Matrix Modal -->
+<div class="modal-overlay" id="cm-modal">
+  <div class="modal-content">
+    <button type="button" class="modal-close" id="modal-close-btn">&times;</button>
+    <h3 id="modal-title" style="margin-bottom: 1rem; color: var(--text-heading); font-size: 1.2rem;">Confusion Matrix</h3>
+    <div style="text-align: center; background-color: var(--bg-alt); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <img id="modal-img" src="" alt="Confusion Matrix" style="max-width: 100%; height: auto; border-radius: var(--radius-sm);">
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const filterTask = document.getElementById("filter-task");
+  const filterMethod = document.getElementById("filter-method");
+  const filterModel = document.getElementById("filter-model");
+  const tbody = document.getElementById("benchmarks-tbody");
+  const rows = tbody.querySelectorAll("tr");
+  const countTag = document.getElementById("results-count-tag");
+
+  function applyFilters() {
+    const tVal = filterTask.value;
+    const mVal = filterMethod.value;
+    const modVal = filterModel.value;
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const rowTask = row.getAttribute("data-task");
+      const rowMethod = row.getAttribute("data-method");
+      const rowModel = row.getAttribute("data-model");
+
+      const matchT = !tVal || rowTask === tVal;
+      const matchM = !mVal || rowMethod === mVal;
+      const matchMod = !modVal || rowModel === modVal;
+
+      if (matchT && matchM && matchMod) {
+        row.style.display = "";
+        visibleCount++;
+      } else {
+        row.style.display = "none";
+      }
+    });
+
+    countTag.textContent = `${visibleCount} Experiments`;
+  }
+
+  filterTask.addEventListener("change", applyFilters);
+  filterMethod.addEventListener("change", applyFilters);
+  filterModel.addEventListener("change", applyFilters);
+
+  // Modal Lightbox
+  const modal = document.getElementById("cm-modal");
+  const modalImg = document.getElementById("modal-img");
+  const modalTitle = document.getElementById("modal-title");
+  const closeBtn = document.getElementById("modal-close-btn");
+
+  document.querySelectorAll(".view-cm-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const expId = btn.getAttribute("data-exp");
+      modalTitle.textContent = `Confusion Matrix: ${expId.replace(/_/g, " ")}`;
+      modalImg.src = `/assets/cm/${expId}_cm.png`;
+      modal.style.display = "flex";
+    });
+  });
+
+  closeBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.style.display = "none";
+  });
+});
+</script>
+{% endblock %}

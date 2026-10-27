@@ -1,0 +1,2 @@
+# Trained model artifacts (.joblib) are placed here.
+# Note: Heavy joblib model files are ignored by git due to GitHub's file size limit.

@@ -1,0 +1,72 @@
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribution & Build
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# IDEs & System Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment & Credentials
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Dataset (IoT Network Intrusion Dataset is ~308 MB, exceeding GitHub's 100 MB limit)
+Data/*.csv
+Data/*.zip
+Data/*.tar.gz
+Data/*.7z
+
+# Heavy Trained Models & Checkpoints (>100 MB files, ~3 GB total)
+# GitHub blocks individual files > 100 MB
+output/models/*.joblib
+output/checkpoints/*.pkl
+!output/checkpoints/preprocessed_meta.pkl
+output/checkpoints/*.npz
+output/predictions/*.csv
+output/results/preds_*.csv
+
+# Temporary logs
+*.log

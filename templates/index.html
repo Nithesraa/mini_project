@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | IIoT Intrusion Detection Lab{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Industrial IoT Intrusion Detection Dashboard</h1>
+  <p>Experimental reproduction and evaluation of machine learning dimensionality reduction techniques (PCA vs. MRMR) across 108 model pipelines on the IoTID20 benchmark dataset.</p>
+</div>
+
+<!-- 4 Key Performance Indicator (KPI) Cards -->
+<section class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-title">Peak Detection Accuracy</div>
+    <div class="kpi-value" style="color: var(--color-success);">{{ kpis.peak_binary_accuracy }}%</div>
+    <div class="kpi-subtext">Binary Task &bull; Decision Tree</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Max Feature Compression</div>
+    <div class="kpi-value" style="color: var(--accent-primary);">84.8%</div>
+    <div class="kpi-subtext">79 &rarr; 12 Features (MRMR Track)</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Peak Edge Throughput</div>
+    <div class="kpi-value">{{ kpis.max_throughput_obs_sec }}</div>
+    <div class="kpi-subtext">Observations / Second (Decision Tree)</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Lowest False Alarm Rate</div>
+    <div class="kpi-value" style="color: var(--color-info);">{{ kpis.lowest_false_alarm_rate }}%</div>
+    <div class="kpi-subtext">FAR = FP / (FP + TN)</div>
+  </div>
+</section>
+
+<!-- Dashboard Main Content Grid -->
+<div class="dashboard-grid">
+  <!-- Research Overview & Core Contribution -->
+  <div class="content-card">
+    <h2>Research Objectives &amp; Key Findings</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+      In resource-constrained Industrial IoT edge deployments, gateways cannot inspect 80+ network flow features in real time without packet drops. This suite replicates <strong>Houkan et al. (IEEE Access, 2024)</strong> to verify whether dimensionality reduction can preserve accuracy while slashing computational overhead.
+    </p>
+
+    <!-- Highlight Callout Box -->
+    <div style="background-color: var(--accent-primary-light); border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 1.15rem 1.25rem; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 0.95rem; margin-bottom: 0.35rem; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.04em;">
+        ⭐ Optimal Pareto Frontier: MRMR-12
+      </h3>
+      <p style="font-size: 0.92rem; color: var(--text-primary); margin: 0; line-height: 1.5;">
+        Reducing input dimensions from <strong>79 baseline features down to 12 MRMR features</strong> achieves an <strong>84.8% compression ratio</strong> and cuts training time by <strong>92.3%</strong>, with a negligible accuracy change of only <strong>0.03%</strong> (99.90% &rarr; 99.86%).
+      </p>
+    </div>
+
+    <!-- Quick Action Links -->
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('main.demo') }}" class="btn-primary" style="text-decoration: none; width: auto; padding: 0.65rem 1.25rem;" id="dashboard-to-demo-btn">
+        <span>⚡</span> Launch Live Threat Demo &rarr;
+      </a>
+      <a href="{{ url_for('main.benchmarks') }}" class="btn-secondary" id="dashboard-to-benchmarks-btn">
+        <span>📈</span> View 108 Model Benchmarks
+      </a>
+      <a href="{{ url_for('main.features') }}" class="btn-secondary" id="dashboard-to-features-btn">
+        <span>🔬</span> Explore Feature Reduction
+      </a>
+    </div>
+  </div>
+
+  <!-- Dataset & Reproduction Specifications -->
+  <div class="content-card">
+    <h2>Dataset Architecture</h2>
+    <ul class="stat-list">
+      <li class="stat-item">
+        <span class="stat-label-text">Reference Dataset</span>
+        <strong class="stat-val-text">IoTID20 Benchmark</strong>
+      </li>
+      <li class="stat-item">
+        <span class="stat-label-text">Total Flow Records</span>
+        <strong class="stat-val-text">625,783 rows</strong>
+      </li>
+      <li class="stat-item">
+        <span class="stat-label-text">Partitioning</span>
+        <strong class="stat-val-text">70% Train / 30% Test (Stratified)</strong>
+      </li>
+      <li class="stat-item">
+        <span class="stat-label-text">Training Split</span>
+        <strong class="stat-val-text">438,048 samples</strong>
+      </li>
+      <li class="stat-item">
+        <span class="stat-label-text">Held-Out Test Split</span>
+        <strong class="stat-val-text">187,735 samples</strong>
+      </li>
+      <li class="stat-item">
+        <span class="stat-label-text">Evaluated Models</span>
+        <strong class="stat-val-text">108 Trained Models (.joblib)</strong>
+      </li>
+      <li class="stat-item">
+        <span class="stat-label-text">Target Distribution</span>
+        <div style="display: flex; gap: 0.4rem;">
+          <span class="tag danger">93.6% Anomaly</span>
+          <span class="tag success">6.4% Normal</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- Section: Multi-Page Exploration Guide -->
+<div class="content-card" style="padding: 1.5rem 1.75rem;">
+  <h2>System Navigation &amp; Specialized Modules</h2>
+  <p style="color: var(--text-secondary); margin-bottom: 1.25rem; font-size: 0.95rem;">
+    This platform organizes evaluation evidence across dedicated, specialized views for focused analysis:
+  </p>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+    <a href="{{ url_for('main.demo') }}" style="text-decoration: none; color: inherit; background-color: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.15rem; transition: var(--transition);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.backgroundColor='#fff'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.backgroundColor='var(--bg-alt)'">
+      <div style="font-size: 1.25rem; margin-bottom: 0.4rem;">⚡ <strong>Live Threat Demo</strong></div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Interactive inference console with step-by-step decision tree paths and probability breakdown.</p>
+    </a>
+    <a href="{{ url_for('main.benchmarks') }}" style="text-decoration: none; color: inherit; background-color: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.15rem; transition: var(--transition);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.backgroundColor='#fff'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.backgroundColor='var(--bg-alt)'">
+      <div style="font-size: 1.25rem; margin-bottom: 0.4rem;">📈 <strong>108 Model Benchmarks</strong></div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Searchable grid of all 108 model permutations with instant confusion matrix inspection.</p>
+    </a>
+    <a href="{{ url_for('main.features') }}" style="text-decoration: none; color: inherit; background-color: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.15rem; transition: var(--transition);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.backgroundColor='#fff'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.backgroundColor='var(--bg-alt)'">
+      <div style="font-size: 1.25rem; margin-bottom: 0.4rem;">🔬 <strong>Feature Reduction Lab</strong></div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Unsupervised PCA variance curves vs. supervised MRMR mutual information rankings.</p>
+    </a>
+    <a href="{{ url_for('main.methodology') }}" style="text-decoration: none; color: inherit; background-color: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.15rem; transition: var(--transition);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.backgroundColor='#fff'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.backgroundColor='var(--bg-alt)'">
+      <div style="font-size: 1.25rem; margin-bottom: 0.4rem;">📐 <strong>Methodology</strong></div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">End-to-end pipeline architecture and verified MATLAB-to-Scikit-Learn parameter mappings.</p>
+    </a>
+  </div>
+</div>
+{% endblock %}
